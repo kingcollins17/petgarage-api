@@ -1,3 +1,9 @@
+import enum
+from typing import List, Optional
+from datetime import datetime, timezone
+from sqlmodel import Field, Relationship, SQLModel
+
+
 class OrderStatus(str, enum.Enum):
     PENDING = "pending"
     PAID = "paid"
@@ -13,9 +19,11 @@ class Order(SQLModel, table=True):
 
     # Paystack Reference
     payment_reference: str = Field(unique=True, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     items: List["OrderItem"] = Relationship(back_populates="order")
+    payments: List["Payment"] = Relationship(back_populates="order")
+    customer: "CustomerProfile" = Relationship(back_populates="orders")
 
 
 class OrderItem(SQLModel, table=True):

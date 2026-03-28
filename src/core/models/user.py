@@ -30,6 +30,16 @@ class User(SQLModel, table=True):
     customer_profile: Optional["CustomerProfile"] = Relationship(back_populates="user")
     vendor_profile: Optional["VendorProfile"] = Relationship(back_populates="user")
 
+    # Permission relationships
+    permission_links: List["UserPermissionLink"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"foreign_keys": "[UserPermissionLink.user_id]"},
+    )
+    permission_group_links: List["UserPermissionGroupLink"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"foreign_keys": "[UserPermissionGroupLink.user_id]"},
+    )
+
     def __repr__(self) -> str:
         return f"<User(email={self.email}, role={self.role})>"
 
@@ -53,6 +63,7 @@ class VendorProfile(SQLModel, table=True):
     # Relationships
     user_id: int = Field(foreign_key="user.id", unique=True)
     user: User = Relationship(back_populates="vendor_profile")
+    products: List["Product"] = Relationship(back_populates="vendor")
 
     def __repr__(self) -> str:
         return f"<VendorProfile(store_name={self.store_name})>"
@@ -72,11 +83,12 @@ class CustomerProfile(SQLModel, table=True):
     state: Optional[str] = Field(default=None)
 
     # Metadata
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user_id: int = Field(foreign_key="user.id", unique=True)
     user: User = Relationship(back_populates="customer_profile")
+    orders: List["Order"] = Relationship(back_populates="customer")
 
     def __repr__(self) -> str:
         return f"<CustomerProfile(user_id={self.user_id})>"

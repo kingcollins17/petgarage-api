@@ -1,3 +1,8 @@
+import enum
+from typing import Optional
+from sqlmodel import Field, Relationship, SQLModel
+
+
 class ProductCategory(str, enum.Enum):
     PET = "pet"
     SUPPLY = "supply"
@@ -12,7 +17,7 @@ class Product(SQLModel, table=True):
     category: ProductCategory
     vendor_id: int = Field(foreign_key="vendorprofile.id")
 
-    vendor: VendorProfile = Relationship(back_populates="products")
+    vendor: "VendorProfile" = Relationship(back_populates="products")
     # Specific details for pets
     pet_details: Optional["PetDetail"] = Relationship(back_populates="product")
 

@@ -1,24 +1,24 @@
-from enum import Enum
+import enum
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import Field, Relationship, SQLModel
 
 
-class PaymentMethod(str, Enum):
+class PaymentMethod(str, enum.Enum):
     CARD = "card"
     BANK_TRANSFER = "bank_transfer"
     USSD = "ussd"
     CASH = "cash"
 
 
-class PaymentProvider(str, Enum):
+class PaymentProvider(str, enum.Enum):
     PAYSTACK = "paystack"
     FLUTTERWAVE = "flutterwave"
     CASH_ON_DELIVERY = "cod"
     MANUAL = "manual"
 
 
-class PaymentStatus(str, Enum):
+class PaymentStatus(str, enum.Enum):
     PENDING = "pending"
     SUCCESSFUL = "successful"
     FAILED = "failed"
@@ -44,7 +44,8 @@ class Payment(SQLModel, table=True):
     # Metadata (Stores raw JSON from Paystack/Flutterwave for debugging)
     provider_metadata: Optional[str] = None
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     confirmed_at: Optional[datetime] = None  # When the money actually hit your account
 
     order: "Order" = Relationship(back_populates="payments")
+    refunds: List["Refund"] = Relationship(back_populates="payment")

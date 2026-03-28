@@ -1,3 +1,9 @@
+import enum
+from typing import Optional
+from datetime import datetime, timezone
+from sqlmodel import Field, Relationship, SQLModel
+
+
 class RefundStatus(str, enum.Enum):
     PENDING = "pending"
     COMPLETED = "completed"
@@ -14,10 +20,6 @@ class Refund(SQLModel, table=True):
 
     # Provider's refund ID (from Paystack/Flutterwave API)
     external_refund_id: Optional[str] = Field(unique=True, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     payment: "Payment" = Relationship(back_populates="refunds")
-
-
-# Add this relationship to your existing Payment model
-# refunds: List["Refund"] = Relationship(back_populates="payment")
