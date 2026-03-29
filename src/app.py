@@ -11,11 +11,16 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
 
+from src.features.accounts.routers import auth_router, accounts_router
+
 app = FastAPI(
     title=config.APP_NAME, 
     debug=config.APP_DEBUG,
     lifespan=lifespan
 )
+
+app.include_router(auth_router, prefix=config.API_V1_STR)
+app.include_router(accounts_router, prefix=config.API_V1_STR)
 
 
 @app.get("/")

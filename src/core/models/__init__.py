@@ -5,7 +5,7 @@ from .payment import Payment, PaymentMethod, PaymentProvider, PaymentStatus
 from .refund import Refund, RefundStatus
 from .permission import (
     Permission,
-    PermissionAction,
+    PermissionCodename,
     PermissionGroup,
     PermissionGroupPermissionLink,
     UserPermissionLink,

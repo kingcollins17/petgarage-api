@@ -22,3 +22,15 @@ from .permission_repository import (
 
 def get_user_repository(db: AsyncSession = Depends(get_db)):
     return UserRepository(db=db)
+
+
+def get_customer_profile_repository(db: AsyncSession = Depends(get_db)):
+    return CustomerProfileRepository(db=db)
+
+
+def get_vendor_profile_repository(db: AsyncSession = Depends(get_db)):
+    return VendorProfileRepository(db=db)
+
+
+def get_permission_repository(db: AsyncSession = Depends(get_db)):
+    return PermissionRepository(db=db)

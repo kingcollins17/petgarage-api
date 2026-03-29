@@ -21,23 +21,44 @@ Architecture:
 """
 
 import enum
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime, timezone
 from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 # ---------------------------------------------------------------------------
 # Core: Permission
 # ---------------------------------------------------------------------------
 
-class PermissionAction(str, enum.Enum):
-    """Standard CRUD + custom actions."""
-    CREATE = "create"
-    READ = "read"
-    UPDATE = "update"
-    DELETE = "delete"
-    MANAGE = "manage"   # Wildcard – implies all actions on a resource
-    EXECUTE = "execute" # For non-CRUD operations (e.g., trigger a job)
+
+class PermissionCodename(str, enum.Enum):
+    """Enumeration of common permission codenames to avoid hardcoding strings."""
+    # User Management
+    USER_CREATE = "user:create"
+    USER_READ = "user:read"
+    USER_UPDATE = "user:update"
+    USER_DELETE = "user:delete"
+    USER_MANAGE = "user:manage"
+
+    # Product Management
+    PRODUCT_CREATE = "product:create"
+    PRODUCT_READ = "product:read"
+    PRODUCT_UPDATE = "product:update"
+    PRODUCT_DELETE = "product:delete"
+    PRODUCT_MANAGE = "product:manage"
+
+    # Order Management
+    ORDER_CREATE = "order:create"
+    ORDER_READ = "order:read"
+    ORDER_UPDATE = "order:update"
+    ORDER_DELETE = "order:delete"
+    ORDER_MANAGE = "order:manage"
+
+    # Permission Management
+    PERMISSION_MANAGE = "permission:manage"
 
 
 class Permission(SQLModel, table=True):
@@ -58,7 +79,7 @@ class Permission(SQLModel, table=True):
 
     # Structured fields for programmatic filtering
     resource: str = Field(index=True, max_length=64)     # e.g. "product"
-    action: PermissionAction = Field(index=True)          # e.g. "create"
+    action: str = Field(index=True)          # e.g. "create"
 
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
