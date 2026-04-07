@@ -14,9 +14,10 @@ class BaseRepository(Generic[ModelType]):
         """Fetch a single record by its primary key."""
         return await self.db.get(self.model, id)
 
-    async def list(self, skip: int = 0, limit: int = 100) -> List[ModelType]:
+    async def list(self, page: int = 1, per_page: int = 100) -> List[ModelType]:
         """Fetch a list of records with pagination."""
-        statement = select(self.model).offset(skip).limit(limit)
+        offset = (page - 1) * per_page
+        statement = select(self.model).offset(offset).limit(per_page)
         results = await self.db.execute(statement)
         return results.scalars().all()
 

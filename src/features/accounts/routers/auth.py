@@ -1,5 +1,7 @@
 import traceback
 from fastapi import APIRouter, Depends, HTTPException, status
+from src.core.enums import ApiTags
+from src.core.schemas import GenericResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from src.features.accounts.schemas.auth import (
     UserCreate,
@@ -13,10 +15,10 @@ from src.features.accounts.schemas.auth import (
 )
 from src.services.auth_service import AuthService, get_auth_service
 
-router = APIRouter(prefix="/auth", tags=["Accounts"])
+router = APIRouter(prefix="/auth", tags=[ApiTags.AUTH])
 
 
-@router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", response_model=GenericResponse[UserRead], status_code=status.HTTP_201_CREATED)
 async def signup(
     user_data: UserCreate, auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -29,7 +31,7 @@ async def signup(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered",
             )
-        return await auth_service.signup_user(user_data.model_dump())
+        return {"data": await auth_service.signup_user(user_data.model_dump())}
     except HTTPException:
         raise
     except Exception:
@@ -66,7 +68,7 @@ async def login(
         )
 
 
-@router.post("/send-otp")
+@router.post("/send-otp", response_model=GenericResponse[None])
 async def send_otp(
     request: OTPRequest, auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -77,7 +79,7 @@ async def send_otp(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to send OTP"
             )
-        return {"message": "OTP sent successfully"}
+        return GenericResponse(message="OTP sent successfully")
     except HTTPException:
         raise
     except Exception:
@@ -88,7 +90,7 @@ async def send_otp(
         )
 
 
-@router.post("/verify-otp")
+@router.post("/verify-otp", response_model=GenericResponse[None])
 async def verify_otp(
     request: OTPVerify, auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -99,7 +101,7 @@ async def verify_otp(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP"
             )
-        return {"message": "OTP verified successfully"}
+        return GenericResponse(message="OTP verified successfully")
     except HTTPException:
         raise
     except Exception:
@@ -110,7 +112,7 @@ async def verify_otp(
         )
 
 
-@router.post("/change-password")
+@router.post("/change-password", response_model=GenericResponse[None])
 async def change_password(
     request: PasswordChange,
     user_id: int,
@@ -125,7 +127,7 @@ async def change_password(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect old password"
             )
-        return {"message": "Password changed successfully"}
+        return GenericResponse(message="Password changed successfully")
     except HTTPException:
         raise
     except Exception:
@@ -136,7 +138,7 @@ async def change_password(
         )
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", response_model=GenericResponse[None])
 async def reset_password(
     request: PasswordReset, auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -150,7 +152,7 @@ async def reset_password(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to reset password. Please verify OTP and email.",
             )
-        return {"message": "Password reset successfully"}
+        return GenericResponse(message="Password reset successfully")
     except HTTPException:
         raise
     except Exception:

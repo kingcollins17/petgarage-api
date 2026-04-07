@@ -12,6 +12,8 @@ async def lifespan(app: FastAPI):
     yield
 
 from src.features.accounts.routers import auth_router, accounts_router
+from src.features.products.routers import products_router, categories_router
+from src.features.permissions.routers import permissions_router, permission_groups_router, assignments_router
 
 app = FastAPI(
     title=config.APP_NAME, 
@@ -21,6 +23,11 @@ app = FastAPI(
 
 app.include_router(auth_router, prefix=config.API_V1_STR)
 app.include_router(accounts_router, prefix=config.API_V1_STR)
+app.include_router(products_router, prefix=config.API_V1_STR)
+app.include_router(categories_router, prefix=config.API_V1_STR)
+app.include_router(permissions_router, prefix=config.API_V1_STR)
+app.include_router(permission_groups_router, prefix=config.API_V1_STR)
+app.include_router(assignments_router, prefix=config.API_V1_STR)
 
 
 @app.get("/")

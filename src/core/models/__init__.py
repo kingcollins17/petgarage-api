@@ -1,5 +1,5 @@
 from .user import User, UserRole, VendorProfile, CustomerProfile
-from .product import Product, PetDetail, ProductCategory
+from .product import Product, PetDetail, Category, ProductCategoryLink
 from .order import Order, OrderItem, OrderStatus
 from .payment import Payment, PaymentMethod, PaymentProvider, PaymentStatus
 from .refund import Refund, RefundStatus

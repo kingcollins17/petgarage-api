@@ -1,6 +1,8 @@
 import traceback
 from typing import Union
 from fastapi import APIRouter, Depends, HTTPException, status
+from src.core.enums import ApiTags
+from src.core.schemas import GenericResponse
 from src.features.accounts.schemas.auth import (
     UserRead, UserUpdate,
     CustomerProfileRead, CustomerProfileUpdate,
@@ -23,16 +25,16 @@ from src.services.auth_service import (
     get_current_vendor
 )
 
-router = APIRouter(prefix="/accounts", tags=["Account Management"])
+router = APIRouter(prefix="/accounts", tags=[ApiTags.ACCOUNT_MANAGEMENT])
 
 
-@router.get("/me", response_model=UserRead)
+@router.get("/me", response_model=GenericResponse[UserRead])
 async def get_my_account(current_user: User = Depends(get_current_user)):
     """Fetches identifying information about the currently logged-in user."""
-    return current_user
+    return {"data": current_user}
 
 
-@router.patch("/me", response_model=UserRead)
+@router.patch("/me", response_model=GenericResponse[UserRead])
 async def update_my_account(
     update_data: UserUpdate,
     current_user: User = Depends(get_current_user),
@@ -42,7 +44,7 @@ async def update_my_account(
     try:
         data = update_data.model_dump(exclude_unset=True)
         if not data:
-            return current_user
+            return {"data": current_user}
 
         if "email" in data and data["email"] != current_user.email:
             existing = await user_repo.get_by_email(data["email"])
@@ -52,7 +54,7 @@ async def update_my_account(
                     detail="Email already in use by another account."
                 )
 
-        return await user_repo.update(current_user, data)
+        return {"data": await user_repo.update(current_user, data)}
     except HTTPException:
         raise
     except Exception:
@@ -63,7 +65,7 @@ async def update_my_account(
         )
 
 
-@router.get("/me/profile", response_model=Union[CustomerProfileRead, VendorProfileRead])
+@router.get("/me/profile", response_model=GenericResponse[Union[CustomerProfileRead, VendorProfileRead]])
 async def get_my_profile(
     current_user: User = Depends(get_current_user),
     customer_repo: CustomerProfileRepository = Depends(get_customer_profile_repository),
@@ -79,12 +81,12 @@ async def get_my_profile(
             profile = await customer_repo.get_by_user_id(current_user.id)
             if not profile:
                 raise HTTPException(status_code=404, detail="Customer profile not found.")
-            return profile
+            return {"data": profile}
         elif current_user.role == UserRole.VENDOR:
             profile = await vendor_repo.get_by_user_id(current_user.id)
             if not profile:
                 raise HTTPException(status_code=404, detail="Vendor profile not found.")
-            return profile
+            return {"data": profile}
         else:
             raise HTTPException(status_code=400, detail="User role does not have a managed profile.")
     except HTTPException:
@@ -94,7 +96,7 @@ async def get_my_profile(
         raise HTTPException(status_code=500, detail="Failed to fetch profile.")
 
 
-@router.patch("/me/customer-profile", response_model=CustomerProfileRead)
+@router.patch("/me/customer-profile", response_model=GenericResponse[CustomerProfileRead])
 async def update_customer_profile(
     update_data: CustomerProfileUpdate,
     current_user: User = Depends(get_current_customer),
@@ -109,10 +111,10 @@ async def update_customer_profile(
         data = update_data.model_dump(exclude_unset=True)
         
         if profile:
-            return await customer_repo.update(profile, data)
+            return {"data": await customer_repo.update(profile, data)}
         else:
             new_profile = CustomerProfile(**data, user_id=current_user.id)
-            return await customer_repo.create(new_profile)
+            return {"data": await customer_repo.create(new_profile)}
     except HTTPException:
         raise
     except Exception:
@@ -120,7 +122,7 @@ async def update_customer_profile(
         raise HTTPException(status_code=500, detail="Failed to update customer profile.")
 
 
-@router.patch("/me/vendor-profile", response_model=VendorProfileRead)
+@router.patch("/me/vendor-profile", response_model=GenericResponse[VendorProfileRead])
 async def update_vendor_profile(
     update_data: VendorProfileUpdate,
     current_user: User = Depends(get_current_vendor),
@@ -135,10 +137,10 @@ async def update_vendor_profile(
         data = update_data.model_dump(exclude_unset=True)
         
         if profile:
-            return await vendor_repo.update(profile, data)
+            return {"data": await vendor_repo.update(profile, data)}
         else:
             new_profile = VendorProfile(**data, user_id=current_user.id)
-            return await vendor_repo.create(new_profile)
+            return {"data": await vendor_repo.create(new_profile)}
     except HTTPException:
         raise
     except Exception:

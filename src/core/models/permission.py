@@ -25,8 +25,7 @@ from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime, timezone
 from sqlmodel import Field, Relationship, SQLModel
 
-if TYPE_CHECKING:
-    from .user import User
+from .user import User
 
 
 # ---------------------------------------------------------------------------
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
 
 class PermissionCodename(str, enum.Enum):
     """Enumeration of common permission codenames to avoid hardcoding strings."""
+
     # User Management
     USER_CREATE = "user:create"
     USER_READ = "user:read"
@@ -49,6 +49,13 @@ class PermissionCodename(str, enum.Enum):
     PRODUCT_UPDATE = "product:update"
     PRODUCT_DELETE = "product:delete"
     PRODUCT_MANAGE = "product:manage"
+
+    # Category Management
+    CATEGORY_CREATE = "category:create"
+    CATEGORY_READ = "category:read"
+    CATEGORY_UPDATE = "category:update"
+    CATEGORY_DELETE = "category:delete"
+    CATEGORY_MANAGE = "category:manage"
 
     # Order Management
     ORDER_CREATE = "order:create"
@@ -78,8 +85,8 @@ class Permission(SQLModel, table=True):
     description: Optional[str] = Field(default=None, max_length=512)
 
     # Structured fields for programmatic filtering
-    resource: str = Field(index=True, max_length=64)     # e.g. "product"
-    action: str = Field(index=True)          # e.g. "create"
+    resource: str = Field(index=True, max_length=64)  # e.g. "product"
+    action: str = Field(index=True)  # e.g. "create"
 
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -88,9 +95,7 @@ class Permission(SQLModel, table=True):
     group_links: List["PermissionGroupPermissionLink"] = Relationship(
         back_populates="permission"
     )
-    user_links: List["UserPermissionLink"] = Relationship(
-        back_populates="permission"
-    )
+    user_links: List["UserPermissionLink"] = Relationship(back_populates="permission")
 
     def __repr__(self) -> str:
         return f"<Permission(codename={self.codename})>"
@@ -99,6 +104,7 @@ class Permission(SQLModel, table=True):
 # ---------------------------------------------------------------------------
 # Core: Permission Group (Role)
 # ---------------------------------------------------------------------------
+
 
 class PermissionGroup(SQLModel, table=True):
     """
@@ -132,6 +138,7 @@ class PermissionGroup(SQLModel, table=True):
 # Link: PermissionGroup ↔ Permission  (many-to-many)
 # ---------------------------------------------------------------------------
 
+
 class PermissionGroupPermissionLink(SQLModel, table=True):
     """Associates permissions with a permission group."""
 
@@ -147,14 +154,13 @@ class PermissionGroupPermissionLink(SQLModel, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="permission_links"
     )
-    permission: "Permission" = Relationship(
-        back_populates="group_links"
-    )
+    permission: "Permission" = Relationship(back_populates="group_links")
 
 
 # ---------------------------------------------------------------------------
 # Link: User ↔ Permission  (direct, many-to-many)
 # ---------------------------------------------------------------------------
+
 
 class UserPermissionLink(SQLModel, table=True):
     """
@@ -182,14 +188,13 @@ class UserPermissionLink(SQLModel, table=True):
         back_populates="permission_links",
         sa_relationship_kwargs={"foreign_keys": "[UserPermissionLink.user_id]"},
     )
-    permission: "Permission" = Relationship(
-        back_populates="user_links"
-    )
+    permission: "Permission" = Relationship(back_populates="user_links")
 
 
 # ---------------------------------------------------------------------------
 # Link: User ↔ PermissionGroup  (many-to-many)
 # ---------------------------------------------------------------------------
+
 
 class UserPermissionGroupLink(SQLModel, table=True):
     """Assigns a permission group (role) to a user."""
@@ -208,6 +213,4 @@ class UserPermissionGroupLink(SQLModel, table=True):
         back_populates="permission_group_links",
         sa_relationship_kwargs={"foreign_keys": "[UserPermissionGroupLink.user_id]"},
     )
-    permission_group: "PermissionGroup" = Relationship(
-        back_populates="user_links"
-    )
+    permission_group: "PermissionGroup" = Relationship(back_populates="user_links")

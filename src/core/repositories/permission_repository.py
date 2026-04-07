@@ -53,6 +53,25 @@ class PermissionRepository(BaseRepository[Permission]):
         
         return effective
 
+    async def assign_to_user(self, user_id: int, permission_id: int, assigned_by_id: int, is_denied: bool = False) -> UserPermissionLink:
+        """Directly assigns a permission to a user."""
+        link = UserPermissionLink(user_id=user_id, permission_id=permission_id, assigned_by=assigned_by_id, is_denied=is_denied)
+        self.db.add(link)
+        await self.db.commit()
+        await self.db.refresh(link)
+        return link
+
+    async def remove_from_user(self, user_id: int, permission_id: int) -> bool:
+        """Removes a direct permission assignment from a user."""
+        statement = select(UserPermissionLink).where(UserPermissionLink.user_id == user_id, UserPermissionLink.permission_id == permission_id)
+        result = await self.db.execute(statement)
+        link = result.scalar_one_or_none()
+        if link:
+            await self.db.delete(link)
+            await self.db.commit()
+            return True
+        return False
+
 
 class PermissionGroupRepository(BaseRepository[PermissionGroup]):
     def __init__(self, db):
@@ -63,3 +82,41 @@ class PermissionGroupRepository(BaseRepository[PermissionGroup]):
         statement = select(PermissionGroup).where(PermissionGroup.name == name)
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
+
+    async def assign_to_user(self, user_id: int, group_id: int, assigned_by_id: int) -> UserPermissionGroupLink:
+        """Assigns a permission group to a user."""
+        link = UserPermissionGroupLink(user_id=user_id, permission_group_id=group_id, assigned_by=assigned_by_id)
+        self.db.add(link)
+        await self.db.commit()
+        await self.db.refresh(link)
+        return link
+
+    async def remove_from_user(self, user_id: int, group_id: int) -> bool:
+        """Removes a group assignment from a user."""
+        statement = select(UserPermissionGroupLink).where(UserPermissionGroupLink.user_id == user_id, UserPermissionGroupLink.permission_group_id == group_id)
+        result = await self.db.execute(statement)
+        link = result.scalar_one_or_none()
+        if link:
+            await self.db.delete(link)
+            await self.db.commit()
+            return True
+        return False
+
+    async def add_permission(self, group_id: int, permission_id: int) -> PermissionGroupPermissionLink:
+        """Adds a single permission to a group."""
+        link = PermissionGroupPermissionLink(permission_group_id=group_id, permission_id=permission_id)
+        self.db.add(link)
+        await self.db.commit()
+        await self.db.refresh(link)
+        return link
+
+    async def remove_permission(self, group_id: int, permission_id: int) -> bool:
+        """Removes a single permission from a group."""
+        statement = select(PermissionGroupPermissionLink).where(PermissionGroupPermissionLink.permission_group_id == group_id, PermissionGroupPermissionLink.permission_id == permission_id)
+        result = await self.db.execute(statement)
+        link = result.scalar_one_or_none()
+        if link:
+            await self.db.delete(link)
+            await self.db.commit()
+            return True
+        return False

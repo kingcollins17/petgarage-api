@@ -13,11 +13,14 @@ class Config(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # Database Settings
+    # Supported values: "mysql" | "postgres"
+    DB_TYPE: str = "mysql"
     DB_HOST: str
+    DB_PORT: str
     DB_USER: str
     DB_PASSWORD: str
     DB_NAME: str
-    
+
     # Security Settings
     SECRET_KEY: str = "your-secret-key-replace-me"
     ALGORITHM: str = "HS256"

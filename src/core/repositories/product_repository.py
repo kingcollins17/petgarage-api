@@ -1,4 +1,4 @@
-from src.core.models.product import Product, PetDetail
+from src.core.models.product import Product, PetDetail, Category
 from src.core.repositories.base import BaseRepository
 
 
@@ -10,3 +10,8 @@ class ProductRepository(BaseRepository[Product]):
 class PetDetailRepository(BaseRepository[PetDetail]):
     def __init__(self, db):
         super().__init__(PetDetail, db)
+
+
+class CategoryRepository(BaseRepository[Category]):
+    def __init__(self, db):
+        super().__init__(Category, db)

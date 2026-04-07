@@ -7,7 +7,7 @@ from .user_repository import (
     CustomerProfileRepository,
     VendorProfileRepository,
 )
-from .product_repository import ProductRepository, PetDetailRepository
+from .product_repository import ProductRepository, PetDetailRepository, CategoryRepository
 from .order_repository import (
     OrderRepository,
     OrderItemRepository,
@@ -34,3 +34,15 @@ def get_vendor_profile_repository(db: AsyncSession = Depends(get_db)):
 
 def get_permission_repository(db: AsyncSession = Depends(get_db)):
     return PermissionRepository(db=db)
+
+
+def get_product_repository(db: AsyncSession = Depends(get_db)):
+    return ProductRepository(db=db)
+
+
+def get_category_repository(db: AsyncSession = Depends(get_db)):
+    return CategoryRepository(db=db)
+
+
+def get_permission_group_repository(db: AsyncSession = Depends(get_db)):
+    return PermissionGroupRepository(db=db)
