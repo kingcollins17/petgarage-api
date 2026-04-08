@@ -18,7 +18,7 @@ async def test_signup_success(client, mock_user_repo):
     
     # Assertions
     assert response.status_code == 201
-    assert response.json()["email"] == "new@example.com"
+    assert response.json()["data"]["email"] == "new@example.com"
     mock_user_repo.create.assert_called_once()
 
 @pytest.mark.asyncio
@@ -90,3 +90,19 @@ async def test_verify_otp_failure(client):
         "otp": "wrong_otp"
     })
     assert response.status_code == 400
+
+@pytest.mark.asyncio
+async def test_login_inactive_account(client, mock_user_repo, test_user):
+    # Setup
+    test_user.active = False
+    mock_user_repo.get_by_email.return_value = test_user
+    
+    # Request
+    response = await client.post("/api/v1/auth/login", data={
+        "username": "test@example.com",
+        "password": "password123"
+    })
+    
+    # Assertions
+    assert response.status_code == 403
+    assert "inactive" in response.json()["detail"]

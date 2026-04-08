@@ -2,7 +2,7 @@ import traceback
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from src.core.enums import ApiTags
-from src.core.schemas import GenericResponse
+from src.core.schemas import GenericResponse, PaginatedResponse
 from src.features.products.schemas.category import CategoryCreate, CategoryUpdate, CategoryRead
 from src.core.repositories import get_category_repository
 from src.core.repositories.product_repository import CategoryRepository
@@ -26,14 +26,22 @@ async def create_category(
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create category.")
 
-@router.get("/", response_model=GenericResponse[List[CategoryRead]])
+@router.get("/", response_model=PaginatedResponse[List[CategoryRead]])
 async def list_categories(
     page: int = 1,
     per_page: int = 100,
     repo: CategoryRepository = Depends(get_category_repository)
 ):
     try:
-        return {"data": await repo.list(page=page, per_page=per_page)}
+        data = await repo.list(page=page, per_page=per_page)
+        return {
+            "data": data,
+            "metadata": {
+                "total": len(data),
+                "page": page,
+                "per_page": per_page
+            }
+        }
     except Exception:
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch categories.")

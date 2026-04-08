@@ -61,5 +61,18 @@ def test_user():
         full_name="Test User",
         role=UserRole.CUSTOMER,
         hashed_password="hashed_password123",
-        is_active=True
+        active=True,
+        verified=False
+    )
+
+@pytest.fixture
+def test_admin():
+    return User(
+        id=999,
+        email="admin@example.com",
+        full_name="Admin User",
+        role=UserRole.ADMIN,
+        hashed_password="hashed_password_admin",
+        active=True,
+        verified=True
     )

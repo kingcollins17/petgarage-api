@@ -11,8 +11,8 @@ async def test_get_me(client, mock_user_repo, test_user):
     
     # Assertions
     assert response.status_code == 200
-    assert response.json()["email"] == test_user.email
-    assert response.json()["full_name"] == test_user.full_name
+    assert response.json()["data"]["email"] == test_user.email
+    assert response.json()["data"]["full_name"] == test_user.full_name
 
 @pytest.mark.asyncio
 async def test_update_me_success(client, mock_user_repo, test_user):
@@ -32,7 +32,7 @@ async def test_update_me_success(client, mock_user_repo, test_user):
     
     # Assertions
     assert response.status_code == 200
-    assert response.json()["full_name"] == "Jane Doe"
+    assert response.json()["data"]["full_name"] == "Jane Doe"
     mock_user_repo.update.assert_called_once()
 
 @pytest.mark.asyncio
@@ -49,7 +49,7 @@ async def test_get_customer_profile_success(client, mock_user_repo, mock_custome
     
     # Assertions
     assert response.status_code == 200
-    assert response.json()["address"] == "123 Customer St"
+    assert response.json()["data"]["address"] == "123 Customer St"
 
 @pytest.mark.asyncio
 async def test_update_customer_profile(client, mock_user_repo, mock_customer_repo, test_user):
@@ -70,7 +70,7 @@ async def test_update_customer_profile(client, mock_user_repo, mock_customer_rep
     
     # Assertions
     assert response.status_code == 200
-    assert response.json()["address"] == "New Address"
+    assert response.json()["data"]["address"] == "New Address"
     mock_customer_repo.create.assert_called_once()
 
 @pytest.mark.asyncio
@@ -101,3 +101,35 @@ async def test_delete_account(client, mock_user_repo, test_user):
     # Assertions
     assert response.status_code == 204
     mock_user_repo.delete.assert_called_once_with(test_user.id)
+
+@pytest.mark.asyncio
+async def test_verify_my_account_success(client, mock_user_repo, test_user):
+    # Setup
+    mock_user_repo.get_by_email.return_value = test_user
+    
+    # Request
+    response = await client.post(
+        "/api/v1/accounts/verify", 
+        json={"email": test_user.email, "otp": "123456"},
+        headers={"Authorization": "Bearer token"}
+    )
+    
+    # Assertions
+    assert response.status_code == 200
+    assert "verified successfully" in response.json()["message"]
+    mock_user_repo.update.assert_called_once()
+    args, kwargs = mock_user_repo.update.call_args
+    assert args[1]["verified"] is True
+
+@pytest.mark.asyncio
+async def test_access_denied_for_inactive_user(client, mock_user_repo, test_user):
+    # Setup - user is inactive
+    test_user.active = False
+    mock_user_repo.get_by_email.return_value = test_user
+    
+    # Request protected endpoint
+    response = await client.get("/api/v1/accounts/me", headers={"Authorization": "Bearer token"})
+    
+    # Assertions
+    assert response.status_code == 403
+    assert "inactive" in response.json()["detail"]

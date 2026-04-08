@@ -8,7 +8,8 @@ class UserRead(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
     role: UserRole
-    is_active: bool = True
+    active: bool = True
+    verified: bool = False
 
 
 class VendorProfileRead(BaseModel):
@@ -54,6 +55,11 @@ class CustomerProfileUpdate(BaseModel):
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+
+
+class UserStatusUpdate(BaseModel):
+    active: Optional[bool] = None
+    verified: Optional[bool] = None
 
 
 class UserCreate(BaseModel):

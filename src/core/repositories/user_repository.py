@@ -1,6 +1,6 @@
-from typing import Optional
-from sqlmodel import select
-from src.core.models.user import User, CustomerProfile, VendorProfile
+from typing import Optional, List
+from sqlmodel import select, col
+from src.core.models.user import User, CustomerProfile, VendorProfile, UserRole
 from src.core.repositories.base import BaseRepository
 
 
@@ -13,6 +13,38 @@ class UserRepository(BaseRepository[User]):
         statement = select(User).where(User.email == email)
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
+
+    async def list(
+        self,
+        page: int = 1,
+        per_page: int = 100,
+        role: Optional[str] = None,
+        active: Optional[bool] = None,
+        verified: Optional[bool] = None,
+        search: Optional[str] = None
+    ) -> List[User]:
+        """Fetch a filtered and paginated list of users."""
+        offset = (page - 1) * per_page
+        
+        statement = select(User)
+
+        # Filters
+        if role:
+            statement = statement.where(User.role == role)
+        if active is not None:
+            statement = statement.where(User.active == active)
+        if verified is not None:
+            statement = statement.where(User.verified == verified)
+        if search:
+            search_filter = f"%{search}%"
+            statement = statement.where(
+                (col(User.email).ilike(search_filter)) | 
+                (col(User.full_name).ilike(search_filter))
+            )
+
+        statement = statement.offset(offset).limit(per_page).order_by(col(User.id).desc())
+        result = await self.db.execute(statement)
+        return result.scalars().all()
 
 
 class CustomerProfileRepository(BaseRepository[CustomerProfile]):

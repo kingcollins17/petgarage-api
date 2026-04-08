@@ -20,7 +20,8 @@ class User(SQLModel, table=True):
     hashed_password: Optional[str] = Field(default=None)
     full_name: Optional[str] = Field(default=None)
     role: UserRole = Field(default=UserRole.CUSTOMER)
-    is_active: bool = Field(default=True)
+    active: bool = Field(default=True)
+    verified: bool = Field(default=False)
 
     # Metadata
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

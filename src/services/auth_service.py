@@ -48,6 +48,12 @@ class AuthService:
         if not self.security.verify_password(password, user.hashed_password):
             return None
             
+        if not user.active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive.",
+            )
+            
         # Create access token
         token_data = {"sub": user.email, "role": user.role}
         access_token = self.security.create_jwt_token(data=token_data)
@@ -102,6 +108,20 @@ class AuthService:
         await self.user_repo.update(user, {"hashed_password": new_hashed_password})
         return True
 
+    async def verify_account(self, email: str, otp: str) -> bool:
+        """
+        Verifies a user's account using an OTP (Mock implementation).
+        """
+        if not await self.verify_otp(email, otp):
+            return False
+            
+        user = await self.user_repo.get_by_email(email)
+        if not user:
+            return False
+            
+        await self.user_repo.update(user, {"verified": True})
+        return True
+
 
 def get_auth_service(
     user_repo: UserRepository = Depends(get_user_repository),
@@ -141,6 +161,12 @@ async def get_current_user(
     user = await user_repo.get_by_email(email)
     if user is None:
         raise credentials_exception
+    
+    if not user.active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive.",
+        )
         
     return user
 

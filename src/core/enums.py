@@ -10,3 +10,4 @@ class ApiTags(str, Enum):
     CATEGORIES = "Categories"
     PERMISSIONS = "Permissions"
     PERMISSION_GROUPS = "Permission Groups"
+    ADMIN_ACCOUNT_MANAGEMENT = "Admin Account Management"

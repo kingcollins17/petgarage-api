@@ -15,10 +15,20 @@ from src.features.accounts.routers import auth_router, accounts_router
 from src.features.products.routers import products_router, categories_router
 from src.features.permissions.routers import permissions_router, permission_groups_router, assignments_router
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title=config.APP_NAME, 
     debug=config.APP_DEBUG,
     lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(auth_router, prefix=config.API_V1_STR)

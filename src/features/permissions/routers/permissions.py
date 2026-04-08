@@ -2,7 +2,7 @@ import traceback
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from src.core.enums import ApiTags
-from src.core.schemas import GenericResponse
+from src.core.schemas import GenericResponse, PaginatedResponse
 from src.features.permissions.schemas.permission import PermissionCreate, PermissionRead, PermissionUpdate
 from src.core.repositories import get_permission_repository
 from src.core.repositories.permission_repository import PermissionRepository
@@ -33,7 +33,7 @@ async def create_permission(
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create permission.")
 
-@router.get("/", response_model=GenericResponse[List[PermissionRead]])
+@router.get("/", response_model=PaginatedResponse[List[PermissionRead]])
 async def list_permissions(
     page: int = 1,
     per_page: int = 100,
@@ -41,7 +41,15 @@ async def list_permissions(
     perm_repo: PermissionRepository = Depends(get_permission_repository)
 ):
     try:
-        return {"data": await perm_repo.list(page=page, per_page=per_page)}
+        data = await perm_repo.list(page=page, per_page=per_page)
+        return {
+            "data": data,
+            "metadata": {
+                "total": len(data),
+                "page": page,
+                "per_page": per_page
+            }
+        }
     except Exception:
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch permissions.")
